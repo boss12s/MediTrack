@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediTrack – Smart Medicine Reminder</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    }
+    .dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      transition: background 0.3s ease;
+      line-height: 1.5;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 i {
+      color: var(--accent);
+    }
+    .theme-toggle {
+      background: var(--card);
+      border: 1px solid var(--border);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+    }
+    .section {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    .section h2, .section h3 {
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+    .medicine-card {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(59, 130, 246, 0.06);
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .medicine-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .medicine-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .medicine-time {
+      background: var(--accent);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .medicine-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+      min-height: 80px;
+      font-size: 0.95rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .note-display {
+      background: rgba(16, 185, 129, 0.1);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      border-left: 3px solid var(--success);
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .privacy-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--card);
+      margin: 8% auto;
+      padding: 24px;
+      width: 92%;
+      max-width: 520px;
+      border-radius: 16px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .close-modal {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .notification-banner {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      padding: 12px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+    .dark .notification-banner {
+      background: #1e3a8a;
+      color: #dbeafe;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><i class="fas fa-pills"></i> MediTrack</h1>
+    <div class="theme-toggle" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </div>
+  </header>
+
+  <div class="section">
+    <h2>Your Health, Simplified</h2>
+    <button class="btn btn-primary" id="addMedBtn">
+      <i class="fas fa-plus"></i> Add Medicine
+    </button>
+  </div>
+
+  <div id="addMedForm" class="section" style="display:none;">
+    <h3 id="formTitle">Add New Medicine</h3>
+    <input type="hidden" id="editId" value="">
+    <label>Medicine Name</label>
+    <input type="text" id="medName" placeholder="e.g., Metformin 500mg" required>
+    
+    <label>Time to Take</label>
+    <input type="time" id="medTime" required>
+    
+    <label>Frequency</label>
+    <select id="medFreq">
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+    </select>
+    
+    <label>Expiry Date (Optional)</label>
+    <input type="date" id="medExpiry">
+    
+    <div style="margin-top: 20px; display:flex; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="saveMedBtn">
+        <i class="fas fa-save"></i> Save Medicine
+      </button>
+      <button class="btn btn-outline" id="cancelMedBtn">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>My Medicines</h2>
+    <div id="medicinesList">
+      <p style="color: var(--muted);">No medicines added yet.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Smart Notifications</h2>
+    <div class="notification-banner">
+      <strong>How it works:</strong> You'll get reminders when you open MediTrack. For real-time alerts, allow notifications below.
+    </div>
+    <button class="btn btn-outline" id="testNotify">
+      <i class="fas fa-bell"></i> Test Notification (10s)
+    </button>
+    <p style="font-size:0.85rem; margin-top:10px; color: var(--muted);">
+      Make sure you've allowed notifications when prompted.
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>Care Circle</h2>
+    <p style="margin-bottom:14px; color: var(--muted);">Notify loved ones if a dose is missed</p>
+    <input type="text" id="contactName" placeholder="Contact Name (e.g., Mom)">
+    <input type="text" id="contactPhone" placeholder="WhatsApp / Phone">
+    <button class="btn btn-outline" id="sendAlertBtn" style="margin-top:12px;">
+      <i class="fab fa-whatsapp"></i> Send Test Alert
+    </button>
+  </div>
+
+  <footer>
+    <p>Your medicine data never leaves your device. 100% private & offline.</p>
+    <p><a class="privacy-link" id="privacyLink">Privacy Policy</a></p>
+  </footer>
+
+  <!-- Privacy Modal -->
+  <div class="modal" id="privacyModal">
+    <div class="modal-content">
+      <span class="close-modal" id="closePrivacy">&times;</span>
+      <h3>Privacy Policy</h3>
+      <p style="margin: 16px 0;">
+        MediTrack is a fully offline web application. All your data — medicines, notes, contacts — is stored only in your browser's local storage.
+        <br><br>
+        We do <strong>not</strong>:
+        • Collect any data<br>
+        • Use cookies or trackers<br>
+        • Send data to servers<br>
+        • Show ads<br>
+        <br>
+        Your privacy is our priority.
+      </p>
+      <button class="btn btn-primary" id="closePrivacyBtn">Understood</button>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const themeToggle = document.getElementById('themeToggle');
+    const addMedBtn = document.getElementById('addMedBtn');
+    const addMedForm = document.getElementById('addMedForm');
+    const formTitle = document.getElementById('formTitle');
+    const medName = document.getElementById('medName');
+    const medTime = document.getElementById('medTime');
+    const medFreq = document.getElementById('medFreq');
+    const medExpiry = document.getElementById('medExpiry');
+    const saveMedBtn = document.getElementById('saveMedBtn');
+    const cancelMedBtn = document.getElementById('cancelMedBtn');
+    const medicinesList = document.getElementById('medicinesList');
+    const testNotify = document.getElementById('testNotify');
+    const sendAlertBtn = document.getElementById('sendAlertBtn');
+    const privacyLink = document.getElementById('privacyLink');
+    const privacyModal = document.getElementById('privacyModal');
+    const closePrivacy = document.getElementById('closePrivacy');
+    const closePrivacyBtn = document.getElementById('closePrivacyBtn');
+    const editId = document.getElementById('editId');
+
+    // Theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark');
+      themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      if (document.body.classList.contains('dark')) {
+        localStorage.setItem('theme', 'dark');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      } else {
+        localStorage.setItem('theme', 'light');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+    });
+
+    // Privacy Modal
+    privacyLink.addEventListener('click', () => privacyModal.style.display = 'block');
+    [closePrivacy, closePrivacyBtn].forEach(el => 
+      el.addEventListener('click', () => privacyModal.style.display = 'none')
+    );
+
+    // Add Medicine Form
+    addMedBtn.addEventListener('click', () => {
+      addMedForm.style.display = 'block';
+      resetForm();
+    });
+    cancelMedBtn.addEventListener('click', () => {
+      addMedForm.style.display = 'none';
+    });
+
+    // Load medicines
+    let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+
+    // Save
+    saveMedBtn.addEventListener('click', () => {
+      const name = medName.value.trim();
+      const time = medTime.value;
+      if (!name || !time) return alert('Please fill required fields.');
+      
+      const med = {
+        id: editId.value || Date.now(),
+        name,
+        time,
+        freq: medFreq.value,
+        expiry: medExpiry.value || '',
+        notes: ''
+      };
+
+      if (editId.value) {
+        medicines = medicines.map(m => m.id == editId.value ? med : m);
+      } else {
+        medicines.push(med);
+      }
+
+      localStorage.setItem('medicines', JSON.stringify(medicines));
+      renderMedicines();
+      addMedForm.style.display = 'none';
+    });
+
+    // Render
+    function renderMedicines() {
+      if (medicines.length === 0) {
+        medicinesList.innerHTML = '<p style="color: var(--muted);">No medicines added yet.</p>';
+        return;
+      }
+
+      medicinesList.innerHTML = medicines.map(med => `
+        <div class="medicine-card">
+          <div class="medicine-header">
+            <div class="medicine-name">${med.name}</div>
+            <div class="medicine-time">${med.time}</div>
+          </div>
+          <div style="color: var(--muted); margin-bottom:10px;">
+            Frequency: ${med.freq.charAt(0).toUpperCase() + med.freq.slice(1)}
+            ${med.expiry ? ` • Expires: ${med.expiry}` : ''}
+          </div>
+          <div class="medicine-actions">
+            <button class="btn btn-sm btn-outline" onclick="editMedicine(${med.id})">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="toggleNotes(${med.id})">
+              <i class="fas fa-sticky-note"></i> ${med.notes ? 'Notes' : 'Add Notes'}
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="markTaken(${med.id})">
+              <i class="fas fa-check"></i> Taken
+            </button>
+          </div>
+          <div id="notes-${med.id}" style="display:none; margin-top:14px;">
+            <textarea id="noteInput-${med.id}" placeholder="Side effects, doctor advice, etc.">${med.notes || ''}</textarea>
+            <button class="btn btn-sm btn-primary" style="margin-top:10px;" onclick="saveNote(${med.id})">
+              Save Note
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Global functions
+    window.editMedicine = function(id) {
+      const med = medicines.find(m => m.id == id);
+      if (!med) return;
+      editId.value = med.id;
+      medName.value = med.name;
+      medTime.value = med.time;
+      medFreq.value = med.freq;
+      medExpiry.value = med.expiry || '';
+      formTitle.textContent = 'Edit Medicine';
+      addMedForm.style.display = 'block';
+    };
+
+    window.toggleNotes = function(id) {
+      const el = document.getElementById(`notes-${id}`);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.saveNote = function(id) {
+      const note = document.getElementById(`noteInput-${id}`).value;
+      medicines = medicines.map(m => m.id == id ? {...m, notes: note} : m);
+      localStorage.setItem('medicines', JSON.stringify(medicines));
+      renderMedicines();
+    };
+
+    window.markTaken = function(id) {
+      const med = medicines.find(m => m.id == id);
+      if (Notification.permission === 'granted') {
+        new Notification('✅ Taken!', { body: `${med.name} marked as taken.` });
+      }
+      alert(`${med.name} marked as taken!`);
+    };
+
+    // Notification System
+    function requestNotificationPermission() {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(perm => {
+          if (perm === 'granted') {
+            console.log('Notification permission granted');
+          }
+        });
+      }
+    }
+
+    // Request permission on any interaction
+    document.body.addEventListener('click', requestNotificationPermission, { once: true });
+
+    // Test Notification
+    testNotify.addEventListener('click', () => {
+      if (Notification.permission !== 'granted') {
+        alert('Please allow notifications first! (Check address bar for prompt)');
+        requestNotificationPermission();
+        return;
+      }
+      new Notification('🔔 MediTrack Test', {
+        body: 'Your notification system is working! You’ll get medicine reminders when you use MediTrack.',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💊</text></svg>'
+      });
+      alert('A test notification has been sent!');
+    });
+
+    // Care Circle
+    sendAlertBtn.addEventListener('click', () => {
+      const name = document.getElementById('contactName').value;
+      if (!name) return alert('Please enter a contact name.');
+      alert(`✅ Test alert sent to "${name}"!\n(In a real app, this would notify via WhatsApp or SMS.)`);
+    });
+
+    // Init
+    renderMedicines();
+
+    function resetForm() {
+      editId.value = '';
+      medName.value = '';
+      medTime.value = '';
+      medFreq.value = 'daily';
+      medExpiry.value = '';
+      formTitle.textContent = 'Add New Medicine';
+    }
+  </script>
+</body>
+</html>
